@@ -315,7 +315,7 @@ screen(1)
 hist(my_counts.matrix, main="distribution of original raw values")
 screen(2)
 hist(my_counts.filtered.matrix.DESeq_blind.PREPROCESSED, main="distribution of values after filter and norm")
-# Like like we have a bimodal ditribution of abundance values --- but that's a story for another day ...
+# Looks like we have a bimodal ditribution of abundance values --- but that's a story for another day ...
 ############################################################################################################################
 ############################################################################################################################
 
@@ -344,6 +344,12 @@ export_data(my_metadata.reordered, "filtered_counts.metadata.txt")
 ############################################################################################################################
 ############################################################################################################################
 
+# NOTE: From this point on, images will be created as files in your working directory,
+# while RStudio is a great tool I've found that it does not handle production of multiple
+# figures in a consistent way. 
+
+# You'll be able to see the figures by opening them from your working diretory(use the "getwd()" command to remind
+# yourself where that is)
 
 ############################################################################################################################
 ############################################################################################################################
@@ -368,6 +374,8 @@ MGRAST_plot_pco(file_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt", dist
 # creates file: 
 # filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA # the PCoA results
 # filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.DIST # the distance/dissimilarity matrix used to compute the PCoA
+# You can see the other available metrics if you call the function without arguments
+MGRAST_plot_pco()
 
 # We can create visualizations of a PCoA without metadata
 render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", color_list="red")
@@ -380,25 +388,7 @@ render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclid
 
 # We can also automatically produce PCoAs colored for every metadata value we have
 render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", metadata_table="filtered_counts.metadata.txt", use_all_metadata_columns=TRUE)
-############################################################################################################################
-############################################################################################################################
-
-
-
-# You can see the other available metrics if you call the function without arguments
-plot_pco()
-
-
-# NOTE: From this point on, images will be created as files in your working directory,
-# while RStudio is a great tool I've found that it does not handle production of multiple
-# figures in a consistent way. 
-
-# You'll be able to see the figures by opening them from your working diretory(use the "getwd()" command to remind
-# yourself where that is)
-
-
-
-
+# Note all outputs will be in your working directory
 ############################################################################################################################
 ############################################################################################################################
 
@@ -406,15 +396,77 @@ plot_pco()
 ############################################################################################################################
 ### Use abundance data and metadata to create heatmap dendrograms
 ############################################################################################################################
+# A heatmap dendrogram can be generated from raw or normalized data
+# There are a number of options for both the distance/dissimilarity metric
+# and the clustering algorithm
+
+# We use defaults for distance/dissimilarity (euclidean) and clustering (ward)
+heatmap_dendrogram.from_file(file_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt")
+
+# We can also add a color bar generated from any of the metadata values
+heatmap_dendrogram.from_file(file_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt",
+                             metadata_table="filtered_counts.metadata.txt", 
+                             metadata_column_index=1
+)
+# Note all outputs will be in your working directory ( filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD.png  )
+# Note: that the heatmap dendrogram creates a text file that contains the data reordered as it appears in the
+# heatmap dendrogram ( filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD_sorted.txt  )
+############################################################################################################################
 ############################################################################################################################
 
-############################################################################################################################
-############################################################################################################################
-
-############################################################################################################################
 ############################################################################################################################
 ### Use statistical tools to find trends in the data and subset based on results of statistical analyses
 ############################################################################################################################
+# We can use any metadata to generate sample groupings for which statistics can be calculated
+# a number of statistical tests are available - use (  ) to see the current list.
+
+# Here we will perform a Kruskal-Wallis (non parametric ANOVA) to identify the level 3 subsystems that exhibit the most 
+# significant differences among the three body sampling locations
+
+stats_from_files(data_table ="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt",
+                 metadata_table="filtered_counts.metadata.txt", 
+                 metadata_column=1
+                 )
+# Note all outputs will be in your working directory
+# Stat tests are sorted by ascending Benjamini & Hochberg FDR
+
+# You can easily use statistical results to subselect the data -- here is an example
+
+# import the results of the statistical test
+my_stats <- import_data("filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.STATS_RESULTS.txt")
+# convert to a dta frame
+my_stats.dataframe <- data.frame(my_stats)
+
+# subselect the subsystems with FDR <= 0.001
+my_stats.lt_0p001 <- my_stats.dataframe[ my_stats.dataframe$Kruskal.Wallis..fdr <= 0.01, ]
+
+# convert back to matrix and export just the coloumns that have the data values 
+# import and use dim on the original data to check the number of columns added by stats
+my_original_data <- import_data("filtered_counts.txt.DESeq_blind.PREPROCESSED.txt")
+dim(my_original_data)
+# 30 columns so:
+subselected_data <- as.matrix(my_stats.lt_0p001)[,1:30]
+export_data(subselected_data, "FDR_subselected_data.txt")
+
+# Now generate a heatmap from the statistically subselected data
+heatmap_dendrogram.from_file(file_in="FDR_subselected_data.txt",
+                             metadata_table="filtered_counts.metadata.txt", 
+                             metadata_column_index=1
+)
+# FDR_subselected_data.txt.HD.png
+# Note: that the heatmap dendrogram creates a text file that contains the data reordered as it appears in the
+# heatmap dendrogram ( FDR_subselected_data.txt.HD_sorted.txt )
+############################################################################################################################
+############################################################################################################################
+
+
+
+
+############################################################################################################################
+### Statistical subselection
+############################################################################################################################
+
+############################################################################################################################
 ############################################################################################################################
 
 
@@ -452,40 +504,3 @@ plot_pco()
 
 
 
-
-
-
-
-
-# note that for this dataset, there were problems downloading, total number of usable metagenomes is 4522
-# affected download for bins 1_to_58, 59 could not download, did not affect 60-94
-# use USE_ME files to make sure that files have missing metagenomes removed
-
-
-
-# export
-
-
-
-# combine the two downloads -- the 1_to_58 file was culled in excel to remove metagenomes that had their ids replaced with R labels
-
-
-# line terminator function
-source("~/git/matR-apps.DrOppenheimer/matR-apps/fix_lt.r")
-
-
-
-
-
-
-# load scripts
-# see load_matR_tools.R
-source("~/Scripts/load_matR_tools.R")
-
-# In search of enterotypes
-
-# Get the abundance data (level 3 subsystems)
-matR_batch_dl(mgid_list="enterotype_id_list.txt")
-
-# Get the metadata
-get_metadata(mgid_list="enterotype_id_list.txt", output_file="HMP_Stool.metadata", debug=TRUE, my_auth_file=NA)
