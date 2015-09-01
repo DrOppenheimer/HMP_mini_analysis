@@ -8,5 +8,6 @@ The only files you need are:
     HMP.30_mgrast_ids.9-1-15
 
 All other files are just examples of the outputs that are generated when you 
-perform the analysis outlined in ths file.
+perform the analysis outlined in the R file applied to the mgids in the 
+second.
 
