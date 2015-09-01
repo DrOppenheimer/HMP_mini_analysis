@@ -1,0 +1,26 @@
+##############################################################
+###################### INPUT PARAMETERS ######################
+data_in:               filtered_counts.txt
+data_type:             file
+output_object:         filtered_counts.txt.DESeq_blind.PREPROCESSED
+output_file:           filtered_counts.txt.DESeq_blind.PREPROCESSED.txt
+removeSg:              TRUEremoveSg_valueMin:     2
+removeSg_rowMin:       4
+log_transform          FALSE
+norm_method:           DESeq_blind
+DESeq_metadata_table:  NA
+DESeq_metadata_column: 1
+DESeq_metadata_type:   file
+DESeq_sharingMode:     maximum
+DESeq_fitType:         local
+scale_0_to_1:          TRUE
+produce_boxplots:      FALSE
+boxplot_height_in:     default
+boxplot_width_in:      default
+debug as.character:    FALSE
+####################### OUTPUT SUMMARY #######################
+output object:         filtered_counts.txt.DESeq_blind.PREPROCESSED
+otuput file:           filtered_counts.txt.DESeq_blind.PREPROCESSED.txt
+output boxplot:        NA
+DESeq regression:      filtered_counts.txt.DESeq_regression.png
+##############################################################
