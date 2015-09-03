@@ -21,7 +21,7 @@ See this link for futher details about the data: http://metagenomics.anl.gov/met
 I used methods identical to those outlined in the "Mini" example to produce a PCoA
 of the complete set of samples. You can easily generate visualizations from the 
 precomputed PCoA and pre-downloaded metadata with the R script contained in the
-directory.
+directory ( HMP_large_example.R ).
 
 Note that further examples and instructions can be found on the google group for matR:
 https://groups.google.com/forum/#!forum/matr-forum
