@@ -120,7 +120,8 @@ remove.singletons <- function (x, lim.entry, lim.row, debug=FALSE) {
 # got to the directory where we want to perform the analysis (This will vary by your machine)
 # if you are using RStudio you can got to "Session" and then "Set Working Directory" and "Choose Directory"
 # I would recommend copying that value here (it will be displayed in the R terminal once selected)
-setwd("~/Documents/Projects/HMP/tutorial.HMP_subset.9-1-15")
+#setwd("~/Documents/Projects/HMP/tutorial.HMP_subset.9-1-15")
+setwd("~/temp/HMP_mini_analysis/")
 
 # import a list of mgrast ids; note that ids should have the "mgm" prefix
 my_ids <- readIDs("HMP.30_mgrast_ids.9-1-15")
@@ -142,12 +143,23 @@ my_views <- list(
 # This view will download the annotation abundances (counts) as well as the corresponding
 # average  e-values, average hit length, and average hit percent identity.
 
+# SUBMIT THE API REQUEST
 # perform download, creating a matR collection that will contain all 4 types of data for the selected metagenomes
 my_collection <- collection(my_ids, my_views)
-# Note that this function will take a minute or two to complete -- it will download the abundance, evalue, length, and
-# percentd tables for all metagenomes in the list. It will not work for more than ~ 50 metagenomes at a time. For large
-# groups of metagenomes you can use the batch downloader provided above
+# Note that this function will take a minute or two to complete -- 
+# When the initial stage is complete, you see 4 messages like the following:
+"request posted: request posted: counts : function : level3 : Subsystems : na"
+# that corresond to each of the 4 views above. This message only means that your 
+# request has been successfully submitted to the MG-RAST API
+# Dependning on your internet connection speed, and workload on MG-RAST, the data 
+# download will take a minute to a few minutes to complete. 
+# This method will not work for more than ~ 50 metagenomes at a time. For large
+# groups of metagenomes you can use the batch downloader provided above.
+# Instructions are provided in the google group for matR
+# In https://groups.google.com/forum/#!topic/matr-forum/ look for the document
+# "Using the batch downloader for the "early-release" version of matR"
 
+# CHECK THE STATUS OF YOUR REQUEST
 # Before proceeding to the next step, make sure that all of the data are downloaded.
 # Issue these commands to check.
 my_collection$my_counts
