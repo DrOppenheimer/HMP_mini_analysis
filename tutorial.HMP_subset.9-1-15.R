@@ -18,8 +18,10 @@ R.Version()
 # uninstall current matR (This is only necessary if your current version was installed from CRAN 
 # or any source other than the early release candidate hosted on github)
 remove.packages("matR")
+# You'll see an error message if you don't already have it installed
 ############################################################################################################################
 # load some additional packages - you may have to install them first
+install.packages("matlab")
 library(matlab)
 ############################################################################################################################
 # install the devtols package
@@ -48,7 +50,7 @@ source_https("https://raw.githubusercontent.com/DrOppenheimer/matR-apps/master/m
 source_https("https://raw.githubusercontent.com/DrOppenheimer/matR-apps/master/get_metadata.R")
 ############################################################################################################################
 # a function to import metadata that has already been downloaded and written to a flat file (using get_metadata and export_data)
-source_https("https://github.com/DrOppenheimer/matR-apps/blob/master/import_metadata.r")
+source_https("https://raw.githubusercontent.com/DrOppenheimer/matR-apps/master/import_metadata.r")
 ############################################################################################################################
 # function to produce raw pco (performs the calculations and produces a flat file output but does not create images/vizualizations)
 # PCoAs can be calculated from raw or normalized annotation abundance data with a variety of distance/dissimilarity metrics.
