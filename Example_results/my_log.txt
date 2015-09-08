@@ -1,0 +1,11 @@
+##############################################################
+#################### get_metadata SUMMARY ####################
+mgid_list:        HMP.30_mgrast_ids.9-1-15
+num_metagenomes   30
+my_auth_file:     NA
+debug:            FALSE
+##############################################################
+output_object:    HMP_30_samples.metadata
+otuput_file:      HMP_30_samples.metadata.txt
+log_file:         HMP_30_samples.metadata.get_metadata.log
+##############################################################
