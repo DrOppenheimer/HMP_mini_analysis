@@ -6,6 +6,18 @@
 # This is a convenient way to avoid limitations imposed by R Studio, and is frequently
 # necessary if you are analyzing a large number of samples (100s to 1,000s)
 
+# Clone this repository (This is the only non R step)
+# On mac or linux this will do it - PC will require installation of github related software; there are a number
+# of such tools freely available
+cd ~
+git clone https://github.com/DrOppenheimer/HMP_mini_analysis.git
+
+# Start R
+R
+
+# Set the correct working directory
+setwd("~/HMP_mini_analysis/")
+
 ############################################################################################################################
 ############################################################################################################################
 ### Load matR and accessorty functions
@@ -184,9 +196,7 @@ export_data(my_avg_length.matrix, "my_lengths.txt")
 export_data(my_avg_pid.matrix, "my_pids.txt")
 
 # Before we produce any plots - we'll use a simple trick to get R's graph parameters back to their defaults
-dev.off()
-dev.new()
-original.par <- par()
+# original.par <- par()
 
 # for fun you can look at the distribution of each type of value in your data
 # All values in all samples at the same time
@@ -205,7 +215,8 @@ hist(my_avg_pid.matrix)
 # to see why
 # Values separated by sample (boxplots)
 
-par(original.par) # reload the default graphical parameters we defined above
+#par(original.par) # reload the default graphical parameters we defined above
+dev.off() # turn off the former graphics device (start graphics from scratch)
 split.screen(c(2,2))
 screen(1)
 boxplot(my_counts.matrix, las=2, main="counts")
@@ -230,25 +241,30 @@ boxplot(my_avg_pid.matrix, las=2, main="avg_pid")
 # Then all of the abundance rows that contain only zeros are removed
 
 # make a copy of the abundance values that will be modified by filtering
-
 my_counts.filtered.matrix <- my_counts.matrix
+# check the dimensions and that the are the same
+dim(my_counts.filtered.matrix); dim(my_counts.matrix)  # both should be 981(rows) by 30(columns)
+identical(my_counts.filtered.matrix, my_counts.matrix) # should return "TRUE"
 
 # filter abundances by evalue (replace values with e-value > my_avg_evalue_exp_max with 0)
 # first look at the distribution of e-value values to determine a reasonable cutoff
-par(original.par) # reload the default graphical parameters we defined above
+#par(original.par) # reload the default graphical parameters we defined above
+dev.off() # turn off the former graphics device (start graphics from scratch)
 hist(my_avg_evalues.matrix)
-# E-06 looks like a reasonable place to cut
-my_avg_evalue_exp_max <- -06 # upper limit for evalue exponent
+# E-03 looks like a reasonable place to cut
+my_avg_evalue_exp_max <- -03 # upper limit for evalue exponent (note that this is a pretty large E-value)
 for (i in 1:nrow(my_counts.filtered.matrix)){
   for (j in 1:ncol(my_counts.filtered.matrix)){
-    if( my_avg_evalues.matrix[i,j] > my_avg_evalue_max ){
+    if( my_avg_evalues.matrix[i,j] > my_avg_evalue_exp_max ){
       my_counts.filtered.matrix[i,j] <- 0
     }
   }
 }
+# with each screen procedure we will check the sum values in each row to see how the data have been altered
 
 # filter abundances avg_length (replace values with average length < my_avg_length_min with 0)
-par(original.par) # reload the default graphical parameters we defined above
+#par(original.par) # reload the default graphical parameters we defined above
+dev.off() # turn off the former graphics device (start graphics from scratch)
 hist(my_avg_length.matrix)
 # Lengths (average database hit length(translated protein length)) are a little on the short side
 # we will use a suitably liberal minimum value
@@ -262,7 +278,8 @@ for (i in  1:nrow(my_counts.filtered.matrix)){
 }
 
 # filter abundances avg_pid (replace values with average < my_avg_pid_min with 0 )
-par(original.par) # reload the default graphical parameters we defined above
+#par(original.par) # reload the default graphical parameters we defined above
+dev.off() # turn off the former graphics device (start graphics from scratch)
 hist(my_avg_pid.matrix)
 # 75 appears to be a reasonable minimum value
 my_avg_pid_min    <- 75 # MG-RAST does not have a pid filter by default
@@ -286,7 +303,7 @@ my_counts.filtered.matrix <- remove.singletons(x=my_counts.filtered.matrix, lim.
 
 # see if any rows or columns have been lost
 dim(my_counts.matrix) ; dim(my_counts.filtered.matrix)
-# we can see that 102 rows were removed due to presence of extremely low values
+# we can see that many rows were removed due to presence of extremely low values
 
 # sort the filtered data by row (not necessary, but I usually like to
 my_counts.filtered.matrix <- my_counts.filtered.matrix[ order(rownames(my_counts.filtered.matrix)), ]
@@ -310,20 +327,21 @@ export_data(data_object=my_counts.filtered.matrix, file_name="filtered_counts.tx
 # Note that the normalization function has some overlap with the screening methods described in the previous 
 # section. We ignore there here, and use the default noramlization procedure(DESeq_blind) for the sake of simplicity.
 # You can normalize annotation abundance data from the file created above:
-MGRAST_preprocessing(data_in=my_counts.filtered.matrix, data_type="r_matrix")
+MGRAST_preprocessing(data_in="filtered_counts.txt", data_type="file")
 # or, if it is still loaded, from the R object that contains the same data
-MGRAST_preprocessing("filtered_counts.txt", data_type="file")
+#     MGRAST_preprocessing(data_in=my_counts.filtered.matrix, data_type="r_matrix")
 # Note that the normalization function returns a lot of information -- this information is 
-# also saved to a log ( my_counts.filtered.matrix.DESeq_blind.PREPROCESSED.txt.log )
-# It also saves the regression used by DESeq to normalize the data ( my_counts.filtered.matrix.DESeq_regression.png )
-# A matrix that contains the normalized values ( my_counts.filtered.matrix.DESeq_blind.PREPROCESSED )
+# also saved to a log ( filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.log )
+# It also saves the regression used by DESeq to normalize the data ( filtered_counts.txt.DESeq_regression.png )
+# A matrix that contains the normalized values ( filtered_counts.txt.DESeq_blind.PREPROCESSED )
 # A file that contains the same normalized values ( filtered_counts.txt.DESeq_blind.PREPROCESSED.txt )
 # It is always good practise to see of normalization eliminated any of rows or columns
-dim(my_counts.filtered.matrix); dim(my_counts.filtered.matrix.DESeq_blind.PREPROCESSED)
+dim(my_counts.filtered.matrix); dim(filtered_counts.txt.DESeq_blind.PREPROCESSED)
 # It did not
 # Now we can take a look at the distribution of the original raw data and along
 # with the data that have undergone filtering and normalization
-par(original.par) # reload the default graphical parameters we defined above
+#par(original.par) # reload the default graphical parameters we defined above
+dev.off() # turn off the former graphics device (start graphics from scratch)
 split.screen(c(2,1))
 screen(1)
 hist(my_counts.matrix, main="distribution of original raw values")
@@ -340,7 +358,7 @@ hist(my_counts.filtered.matrix.DESeq_blind.PREPROCESSED, main="distribution of v
 ############################################################################################################################
 ############################################################################################################################
 # You can download the metadata for your samples like this:
-my_metadata <- get_metadata(mgid_list="HMP.30_mgrast_ids.9-1-15", output_file="HMP_30_samples.metadata")
+get_metadata(mgid_list="HMP.30_mgrast_ids.9-1-15", output_name="HMP_30_samples.metadata")
 # This function can take a minute or two to run -- it performs an independent querry to retrieve the metadata for each sample
 # in the id list, and then formats the metadata to make it more palatable for R and/or human viewing.
 # For more advanced users -- this function retrieves the fully nested metadata object from the API and then 
@@ -351,10 +369,10 @@ my_metadata <- get_metadata(mgid_list="HMP.30_mgrast_ids.9-1-15", output_file="H
 # When data are filtered like those above - it is possible to remove samples (values are all 0, or too low to be retained)
 # In addition - it is usually convenient to make sure that data and metadata columns have the same
 # ordering. Both problems can be addressed with a command like the following
-my_metadata.reordered <- my_metadata[ (colnames(my_counts.filtered.matrix)), ] # Note that in the abundance table, samples
+HMP_30_samples.ordered.metadata <- HMP_30_samples.metadata[ (colnames(my_counts.filtered.matrix)), ] # Note that in the abundance table, samples
 # are per column; in the metadata, samples are per row
 # I'd recommend exporting this reordered metadata
-export_data(my_metadata.reordered, "filtered_counts.metadata.txt")
+export_data(HMP_30_samples.ordered.metadata, "HMP_30_samples.ordered.metadata.txt")
 ############################################################################################################################
 ############################################################################################################################
 
@@ -378,11 +396,12 @@ export_data(my_metadata.reordered, "filtered_counts.metadata.txt")
 # First - calculate the raw pcoa, we'll use euclidean distance and Bray-Curtis Similarity
 # for the sake of comparison.
 
-# With Eucludean:
+# With Eucludean:       
 MGRAST_plot_pco(file_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt", dist_method="euclidean")
 # creates files:
 # filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA # the PCoA results
 # filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.DIST # the distance/dissimilarity matrix used to compute the PCoA
+
 # With Bray_curtis
 MGRAST_plot_pco(file_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt", dist_method="euclidean")
 # creates file: 
@@ -390,19 +409,29 @@ MGRAST_plot_pco(file_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt", dist
 # filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.DIST # the distance/dissimilarity matrix used to compute the PCoA
 # You can see the other available metrics if you call the function without arguments
 MGRAST_plot_pco()
+# This will show you the help and throw an error.
 
+# Remember - per the note above, all remaining images will be created in you working
+# directory - not in the R graphical device
 # We can create visualizations of a PCoA without metadata
 render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", color_list="red")
 
 # We can create a visualization that uses a single column of the metadata
-# reference by column name
-render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", metadata_table="filtered_counts.metadata.txt", metadata_column_index="env_package.data.body_site")
-# or column number (base 1 index)
-render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", metadata_table="filtered_counts.metadata.txt", metadata_column_index=1)
+# Note that you can reference the metadata column by 1 based index:
+
+render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", metadata_table="HMP_30_samples.ordered.metadata.txt", metadata_column_index=1)
+# or the column header for that column
+
+render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", metadata_table="HMP_30_samples.ordered.metadata.txt", metadata_column_index="env_package.data.body_site")
+#creates filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA.env_package.data.body_site.pcoa.png
+
+# Another example
+render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", metadata_table="HMP_30_samples.ordered.metadata.txt", metadata_column_index="sample.data.host_disease")
+# creates filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA.sample.data.host_disease.pcoa.png
 
 # We can also automatically produce PCoAs colored for every metadata value we have
-render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", metadata_table="filtered_counts.metadata.txt", use_all_metadata_columns=TRUE)
-# Note all outputs will be in your working directory
+render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclidean.PCoA", metadata_table="HMP_30_samples.ordered.metadata.txt", use_all_metadata_columns=TRUE)
+# Note all outputs will be in your working directory (the *.PCoA.*.png images) # This will take a few minutes, 76 images are created - one for each column in HMP_30_samples.ordered.metadata.txt
 ############################################################################################################################
 ############################################################################################################################
 
@@ -416,12 +445,31 @@ render_pcoa.v14(PCoA_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.euclid
 
 # We use defaults for distance/dissimilarity (euclidean) and clustering (ward)
 heatmap_dendrogram.from_file(file_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt")
+# creates files:
+# filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD_sorted.txt # flat file with data reordered as it is in the heatmap-dendrogram
+# filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD.png        # image that contains the heatmap dendrogram
 
 # We can also add a color bar generated from any of the metadata values
+# Note that you can reference the metadata column by 1 based index:
 heatmap_dendrogram.from_file(file_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt",
-                             metadata_table="filtered_counts.metadata.txt", 
+                             metadata_table="HMP_30_samples.ordered.metadata.txt", 
                              metadata_column_index=1
 )
+# creates files
+# filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD_sorted.txt
+# filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD.png # has color bar indicating the selected metadata
+# heatmap_legend.png # separate image of the heatmap-dendrogram legend
+
+# or the column header for that column
+heatmap_dendrogram.from_file(file_in="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt",
+                             metadata_table="HMP_30_samples.ordered.metadata.txt", 
+                             metadata_column_index="env_package.data.body_site"
+)
+# creates files
+# filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD_sorted.txt
+# filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD.png # has color bar indicating the selected metadata
+# heatmap_legend.png # separate image of the heatmap-dendrogram legend
+
 # Note all outputs will be in your working directory ( filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD.png  )
 # Note: that the heatmap dendrogram creates a text file that contains the data reordered as it appears in the
 # heatmap dendrogram ( filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.HD_sorted.txt  )
@@ -436,16 +484,23 @@ heatmap_dendrogram.from_file(file_in="filtered_counts.txt.DESeq_blind.PREPROCESS
 
 # Here we will perform a Kruskal-Wallis (non parametric ANOVA) to identify the level 3 subsystems that exhibit the most 
 # significant differences among the three body sampling locations
-
+# Note that as before you can refer to the metadata column by 1 based index
 stats_from_files(data_table ="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt",
-                 metadata_table="filtered_counts.metadata.txt", 
-                 metadata_column=1
-                 )
+                 metadata_table="HMP_30_samples.ordered.metadata.txt", 
+                 metadata_column=1)
+# create file:
+# filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.STATS_RESULTS.txt # contains original data and is appended with results of the statistical tests
+
+# or header
+stats_from_files(data_table ="filtered_counts.txt.DESeq_blind.PREPROCESSED.txt",
+                 metadata_table="HMP_30_samples.ordered.metadata.txt", 
+                 metadata_column="env_package.data.body_site"
+)
+
 # Note all outputs will be in your working directory
 # Stat tests are sorted by ascending Benjamini & Hochberg FDR
 
 # You can easily use statistical results to subselect the data -- here is an example
-
 # import the results of the statistical test
 my_stats <- import_data("filtered_counts.txt.DESeq_blind.PREPROCESSED.txt.STATS_RESULTS.txt")
 # convert to a dta frame
@@ -464,21 +519,36 @@ export_data(subselected_data, "FDR_subselected_data.txt")
 
 # Now generate a heatmap from the statistically subselected data
 heatmap_dendrogram.from_file(file_in="FDR_subselected_data.txt",
-                             metadata_table="filtered_counts.metadata.txt", 
-                             metadata_column_index=1
+                             metadata_table="HMP_30_samples.ordered.metadata.txt", 
+                             metadata_column_index="env_package.data.body_site"
 )
-# FDR_subselected_data.txt.HD.png
-# Note: that the heatmap dendrogram creates a text file that contains the data reordered as it appears in the
-# heatmap dendrogram ( FDR_subselected_data.txt.HD_sorted.txt )
-############################################################################################################################
-############################################################################################################################
-
-
-
-
+# creates files:
+# heatmap_legend.png
+# FDR_subselected_data.txt.HD_sorted.txt # as above, flat file with reordered data (you'll be able to see the row names for the figure here)
+# FDR_subselected_data.txt.HD.png # image
 
 ############################################################################################################################
 ############################################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
